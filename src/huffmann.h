@@ -11,13 +11,13 @@
 
 typedef struct HNode
 {
-    char character;
+    int character;
     size_t freq;
     struct HNode *left;
     struct HNode *right;
 } HNode;
 
-HNode *hnode_new(char character, size_t freq)
+HNode *hnode_new(int character, size_t freq)
 {
     HNode *newNode = (HNode *)malloc(sizeof(HNode));
     newNode->character = character;
@@ -74,7 +74,7 @@ void traverse_tree(HNode *tree, char *codes[], char *code, size_t codeIndex)
     if (tree->left == NULL && tree->right == NULL)
     {
         code[codeIndex] = 0;
-        codes[tree->character] = strdup(code);
+        codes[(uint8_t)tree->character] = strdup(code);
     }
     else
     {
@@ -105,7 +105,7 @@ HNode *huffmann_tree_generate(size_t *map, size_t sizeOfArray)
     HNode **freeIngNode = arrayOfNode;
     HNode *result;
 
-    arrayOfNode[0] = hnode_new(0, 0);
+    arrayOfNode[0] = hnode_new(-1, 0);
 
     size_t j = 1;
 
@@ -182,10 +182,10 @@ void huffmann_encode_file(FILE *inFile, const char *inFileName, char *codes[])
     }
 
     int data = fgetc(inFile);
-
+    char *codeOfChar;
     while (data != EOF)
     {
-        char *codeOfChar = codes[data];
+        codeOfChar = codes[data];
 
         for (; *codeOfChar != 0; codeOfChar++)
         {
@@ -194,6 +194,12 @@ void huffmann_encode_file(FILE *inFile, const char *inFileName, char *codes[])
 
         data = fgetc(inFile);
     }
+    codeOfChar = codes[(uint8_t)-1];
+    for (; *codeOfChar != 0; codeOfChar++)
+    {
+        huffmann_out(outFile, *codeOfChar);
+    }
+
     while (huffmann_out(outFile, '0'))
     {
     }
@@ -231,7 +237,9 @@ void huffmann_decode_file(FILE *file, const char *inFileName, HNode *tree)
                 nodeIndex = nodeIndex->left; // else go left
 
             if (nodeIndex->left == NULL || nodeIndex->right == NULL)
-            {                                         // until a leaf meets
+            {
+                if (nodeIndex->character == -1)
+                    goto end;                         // until a leaf meets
                 putchar(nodeIndex->character);        // spit that character out and
                 fputc(nodeIndex->character, outFile); // save the character in file
                 nodeIndex = tree;                     // reset the nodeIndex
@@ -240,6 +248,7 @@ void huffmann_decode_file(FILE *file, const char *inFileName, HNode *tree)
         }
         in = getc(file);
     }
+end:
 }
 
 #endif

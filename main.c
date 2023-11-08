@@ -46,19 +46,16 @@ int main(int argc, char const *argv[])
     // for (size_t i = 0; i < MAP_SIZE; i++)
     // {
     //     if (codes[i] != NULL)
-    //         printf("%c  : %s\n", i, codes[i]);
+    //         printf("%d  : %s\n", i, codes[i]);
     // }
-
     huffmann_encode_file(fp, argv[1], codes);
 
-    FILE *fp1 = fopen("main.c.huff", "r");
+    FILE *fp1 = fopen("test.txt.huff", "r");
     if (fp1 == NULL)
     {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
-
-
 
     huffmann_decode_file(fp1, argv[1], tree);
 
