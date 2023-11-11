@@ -4,45 +4,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 #include <assert.h>
+#include <string.h>
+#include "hnode.h"
 
 #define MAP_SIZE 256
-
-typedef struct HNode
-{
-    int character;
-    size_t freq;
-    struct HNode *left;
-    struct HNode *right;
-} HNode;
-
-HNode *hnode_new(int character, size_t freq)
-{
-    HNode *newNode = (HNode *)malloc(sizeof(HNode));
-    newNode->character = character;
-    newNode->freq = freq;
-    newNode->left = NULL;
-    newNode->right = NULL;
-
-    return newNode;
-}
-
-void hnode_sort(HNode **arrayOfNode, size_t arraySize)
-{
-    for (size_t i = 0; i < arraySize; i++)
-    {
-        for (size_t j = i; j < arraySize; j++)
-        {
-            if (arrayOfNode[i]->freq > arrayOfNode[j]->freq)
-            {
-                HNode *tmp = arrayOfNode[i];
-                arrayOfNode[i] = arrayOfNode[j];
-                arrayOfNode[j] = tmp;
-            }
-        }
-    }
-}
 
 size_t huffmann_get_frequencies(FILE *fp, size_t map[])
 {
@@ -90,11 +56,6 @@ void huffmann_generate_codes(HNode *tree, char *codes[])
 {
     char code[MAP_SIZE] = {0};
     traverse_tree(tree, codes, code, 0);
-    // code[0] = '0';
-    // traverse_tree(tree->left, codes, code, 1);
-    // memset(code, 0, MAP_SIZE);
-
-    // traverse_tree(tree->right, codes, code, 1);
 }
 
 HNode *huffmann_tree_generate(size_t *map, size_t sizeOfArray)
@@ -166,20 +127,24 @@ char huffmann_out(FILE *file, char bit)
 
 #define CZ_FILENAME_MAXIMUM 100
 
-void huffmann_encode_file(FILE *inFile, const char *inFileName, char *codes[])
+FILE *huffmann_get_compress_output_file(const char *filename)
 {
-
     char outFileName[CZ_FILENAME_MAXIMUM];
 
-    snprintf(outFileName, CZ_FILENAME_MAXIMUM, "%s.huff", inFileName);
+    snprintf(outFileName, CZ_FILENAME_MAXIMUM, "%s.cz", filename);
 
     FILE *outFile = fopen(outFileName, "w");
 
     if (outFile == NULL)
     {
-        fprintf(stderr, "[ERROR] Cannot create the filename %s\n", outFileName);
+        fprintf(stderr, "[ERROR] Cannot create the file named %s\n", outFileName);
         exit(EXIT_FAILURE);
     }
+    return outFile;
+}
+
+void huffmann_encode_file(FILE *inFile, FILE *outFile, char *codes[])
+{
 
     int data = fgetc(inFile);
     char *codeOfChar;

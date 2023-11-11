@@ -1,29 +1,33 @@
-// #include "src/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "src/huffmann.h"
+#include "src/header.h"
 
 void display_usage(const char *appName)
 {
-    fprintf(stderr, "[Usage]: %s <filename>\n");
+    fprintf(stderr,
+            "[Usage]: %s [Options] <filename>\n\n"
+            " Options:\n"
+            "       -c        Compress the file\n"
+            "       -d        Decompress the file\n"
+            "       -h        Display this help message\n",
+            appName);
+
     exit(EXIT_FAILURE);
 }
 
-int main(int argc, char const *argv[])
+void cz_compress_file(const char *fileName)
 {
     size_t map[MAP_SIZE] = {0};
     char *codes[MAP_SIZE] = {0};
 
-    if (argc < 2)
-        display_usage(argv[0]);
-
-    // Open the file
-    FILE *fp = fopen(argv[1], "r");
+    FILE *fp = fopen(fileName, "r");
 
     if (fp == NULL)
     {
-        perror(argv[0]);
+        perror(fileName);
         exit(EXIT_FAILURE);
     }
 
@@ -48,16 +52,57 @@ int main(int argc, char const *argv[])
     //     if (codes[i] != NULL)
     //         printf("%d  : %s\n", i, codes[i]);
     // }
-    huffmann_encode_file(fp, argv[1], codes);
+    Header header;
 
-    FILE *fp1 = fopen("test.txt.huff", "r");
-    if (fp1 == NULL)
+    header_init(&header);
+
+    FILE *outFile = huffmann_get_compress_output_file(fileName); // Get the output file handler
+
+    if (header_from_tree(&header, tree) == true)
+        header_write_to_file(&header, outFile);
+
+    huffmann_encode_file(fp, outFile, codes);
+}
+
+void cz_decompress_file(const char *fileName)
+{
+    printf("[INFO] Decompressing file %s\n", fileName);
+}
+
+int main(int argc, char const *argv[])
+{
+
+    if (argc < 3 || argv[1][0] != '-')
+        display_usage(argv[0]);
+
+    if (strcmp(argv[1], "-c") == 0)
+        cz_compress_file(argv[2]);
+    else if (strcmp(argv[1], "-d") == 0)
+        cz_decompress_file(argv[2]);
+    else if (strcmp(argv[1], "-h") == 0)
+        display_usage(argv[0]);
+    else
     {
-        perror("fopen");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "%s options is not supported !!\n", argv[1]);
+        display_usage(argv[0]);
     }
 
-    huffmann_decode_file(fp1, argv[1], tree);
+    // FILE *fp = fopen(argv[1], "r");
+
+    // if (fp == NULL)
+    // {
+    //     perror(argv[0]);
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // FILE *fp1 = fopen("test.txt.huff", "r");
+    // if (fp1 == NULL)
+    // {
+    //     perror("fopen");
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // huffmann_decode_file(fp1, argv[1], tree);
 
     return 0;
 }
