@@ -1,8 +1,7 @@
 #ifndef _CZ_HNODE_H_
 #define _CZ_HNODE_H_
 
-#include<stdlib.h>
-
+#include <stdlib.h>
 
 typedef struct HNode
 {
@@ -38,5 +37,7 @@ void hnode_sort(HNode **arrayOfNode, size_t arraySize)
         }
     }
 }
+
+
 
 #endif

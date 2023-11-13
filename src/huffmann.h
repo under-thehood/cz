@@ -25,15 +25,7 @@ size_t huffmann_get_frequencies(FILE *fp, size_t map[])
     return numberOfUniqueCharacter;
 }
 
-void hnode_print(HNode **arrayOfNode, size_t arraySize)
-{
-    for (size_t i = 0; i < arraySize; i++)
-    {
-        printf("%c :  %d\n", arrayOfNode[i]->character, arrayOfNode[i]->freq);
-    }
-}
-
-void traverse_tree(HNode *tree, char *codes[], char *code, size_t codeIndex)
+static void traverse_tree(HNode *tree, char *codes[], char *code, size_t codeIndex)
 {
     assert(tree != NULL && "Corrupt huffman tree is provided");
 
@@ -82,10 +74,6 @@ HNode *huffmann_tree_generate(size_t *map, size_t sizeOfArray)
     for (; sizeOfArray != 1;)
     {
         hnode_sort(arrayOfNode, sizeOfArray);
-
-        // For debug Only
-        // printf("=================\n");
-        // hnode_print(arrayOfNode, sizeOfArray);
 
         HNode *new = hnode_new('*', arrayOfNode[0]->freq + arrayOfNode[1]->freq);
 
@@ -143,6 +131,22 @@ FILE *huffmann_get_compress_output_file(const char *filename)
     return outFile;
 }
 
+FILE *huffmann_get_decompress_output_file(const char *filename)
+{
+    char outFileName[CZ_FILENAME_MAXIMUM];
+
+    snprintf(outFileName, CZ_FILENAME_MAXIMUM, "%s.txt", filename);
+
+    FILE *outFile = fopen(outFileName, "w");
+
+    if (outFile == NULL)
+    {
+        fprintf(stderr, "[ERROR] Cannot create the file named %s\n", outFileName);
+        exit(EXIT_FAILURE);
+    }
+    return outFile;
+}
+
 void huffmann_encode_file(FILE *inFile, FILE *outFile, char *codes[])
 {
 
@@ -171,20 +175,8 @@ void huffmann_encode_file(FILE *inFile, FILE *outFile, char *codes[])
     fclose(outFile);
 }
 
-void huffmann_decode_file(FILE *file, const char *inFileName, HNode *tree)
+void huffmann_decode_file(FILE *file, FILE *outFile, HNode *tree)
 {
-
-    char *outputFileName = strdup(inFileName);
-
-    outputFileName[strlen(outputFileName) - 3] = '\0';
-
-    FILE *outFile = fopen(outputFileName, "w");
-
-    if (outFile == NULL)
-    {
-        fprintf(stderr, "[ERROR] Cannot create the filename test.c\n");
-        exit(EXIT_FAILURE);
-    }
 
     int in = getc(file);
     char byteRep = 0;

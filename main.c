@@ -5,6 +5,36 @@
 #include "src/huffmann.h"
 #include "src/header.h"
 
+#define COUNT 5
+
+void print2DUtil(HNode *root, int space)
+{
+    // Base case
+    if (root == NULL)
+        return;
+
+    // Increase distance between levels
+    space += COUNT;
+
+    // Process right child first
+    print2DUtil(root->right, space);
+
+    // Print current node after space
+    // count
+    printf("\n");
+    for (int i = COUNT; i < space; i++)
+        printf(" ");
+    printf("%c\n", root->character);
+
+    // Process left child
+    print2DUtil(root->left, space);
+}
+
+void hnode_print_P(HNode *tree)
+{
+    print2DUtil(tree, 0);
+}
+
 void display_usage(const char *appName)
 {
     fprintf(stderr,
@@ -52,14 +82,10 @@ void cz_compress_file(const char *fileName)
     //     if (codes[i] != NULL)
     //         printf("%d  : %s\n", i, codes[i]);
     // }
-    Header header;
-
-    header_init(&header);
 
     FILE *outFile = huffmann_get_compress_output_file(fileName); // Get the output file handler
 
-    if (header_from_tree(&header, tree) == true)
-        header_write_to_file(&header, outFile);
+    header_write_to_file(outFile, tree);
 
     huffmann_encode_file(fp, outFile, codes);
 }
@@ -67,6 +93,28 @@ void cz_compress_file(const char *fileName)
 void cz_decompress_file(const char *fileName)
 {
     printf("[INFO] Decompressing file %s\n", fileName);
+    FILE *fp = fopen(fileName, "r");
+
+    if (fp == NULL)
+    {
+        perror(fileName);
+        exit(EXIT_FAILURE);
+    }
+
+    uint8_t magicNumber = (uint8_t)getc(fp);
+
+    // Check the magic number for validation
+    if (magicNumber != MAGIC_NUMBER)
+    {
+        fprintf(stderr, "[ERROR] %s file is Invalid compressed ! (Magic number doesnot match)\n Provide valid compressed file\n", fileName);
+        exit(EXIT_FAILURE);
+    }
+
+    HNode *tree = header_read_from_file(fp);
+    // hnode_print_P(tree);
+    FILE *outfile = huffmann_get_decompress_output_file(fileName);
+
+    huffmann_decode_file(fp, outfile, tree);
 }
 
 int main(int argc, char const *argv[])
